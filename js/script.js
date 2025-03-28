@@ -1,121 +1,121 @@
 const firebaseConfig = {
-  apiKey: "AIzaSyBjTSABchzKfRpzqMCvUiZT-c-0GTCAtnc",
-  authDomain: "pruebadatabase-7e515.firebaseapp.com",
-  projectId: "pruebadatabase-7e515",
-  storageBucket: "pruebadatabase-7e515.firebasestorage.app",
-  messagingSenderId: "299548159984",
-  appId: "1:299548159984:web:6493e90ad4f315439ff735",
-  measurementId: "G-TBR64S993K",
+  apiKey: "AIzaSyCZJfAyXFcii38dAyAnyViKHefr82oeBPo",
+  authDomain: "demoweb-a64bf.firebaseapp.com",
+  projectId: "demoweb-a64bf",
+  storageBucket: "demoweb-a64bf.firebasestorage.app",
+  messagingSenderId: "341749134830",
+  appId: "1:341749134830:web:2a9507cb4efca4fdaa8aff"
 };
 
-firebase.initializeApp(firebaseConfig); // Inicializaar app Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-const db = firebase.firestore(); // db representa mi BBDD //inicia Firestore
-// Array para almacenar los contactos//
-let contactos = [];
-db.collection("usuarios")
-  .get()
-  .then((querySnapshot) => {
-    querySnapshot.forEach((doc) => {
-      console.log(doc.id, doc.data().mensaje);
-    });
-  });
+// Función para mostrar los datos//
 const printData = () => {
-  //Petición a Firestore para leer todos los documentos de la colección album
   const listaContactos = document.getElementById("listaContactos");
   listaContactos.innerHTML = "";
 
   db.collection("usuarios")
-    .get()
-    .then((querySnapshot) => {
-      querySnapshot.forEach((doc, id) => {
-        const contactoDiv = document.createElement("div");
-        
-        contactoDiv.innerHTML = `
-            <p>Nombre: ${doc.data().nombre}</p>
-            <p>Email: ${doc.data().email}</p>
-            <p>Mensaje: ${doc.data().mensaje}</p>
-            <p>URL: ${doc.data().url}</p>
-            <p>ID: ${doc.id}</p>
-            <button id="delete" type="button">Borrar</button>
-            <hr>
-        `;
-        listaContactos.appendChild(contactoDiv);
-      });
+      .get()
+      .then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {
+         const contactoDiv = document.createElement("div");
+         contactoDiv.classList.add('contacto-card');//Permite dar estilo específico a cada tarjeta de contacto//
+         contactoDiv.innerHTML = `
+             <p>Nombre: ${doc.data().nombre}</p>
+             <p>Email: ${doc.data().email}</p>
+             <p>Mensaje: ${doc.data().mensaje}</p>
+             <p>URL: ${doc.data().url}</p>
+             <p>ID: ${doc.id}</p>
+             <button class="delete-btn" data-id="${doc.id}">Borrar</button> 
+          
+              `;  
+     const deleteBtn = contactoDiv.querySelector('.delete-btn');
+      deleteBtn.addEventListener('click', () => {
+         borrarDocumento(doc.id);
+             })      
+      listaContactos.appendChild(contactoDiv);
     });
-};
-const readAll = (array) => {
-  db.collection("usuarios")
-    .add(array)
-    .then((docRef) => {
-      console.log("Document written with ID: ", docRef.id);
-      printData();
-    })
-    .catch((error) => console.error("Error adding document: ", error));
+   })
+   .catch(error => console.error("Error al obtener documentos: ", error));
 };
 
+// Función para agregar nuevo contacto//
+const agregarContacto = (contacto) => {
+  return db.collection("usuarios")
+      .add(contacto)
+      .then((docRef) => {
+          console.log("Documento agregado con ID: ", docRef.id);
+          printData();
+          return docRef;
+   })
+      .catch((error) => {
+          console.error("Error al agregar documento: ", error);
+          throw error;
+   });
+};
+
+// Función para borrar un documento específico//
+const borrarDocumento = (id) => {
+  db.collection('usuarios').doc(id).delete()
+      .then(() => {
+          console.log(`Usuario ${id} ha sido borrado`);
+          printData();
+      })
+      .catch((error) => {
+          console.error('Error borrando documento:', error);
+          alert('Error al borrar el documento');
+      });
+};
+
+// Event Listener para el formulario//
 document.querySelector("form").addEventListener("submit", function (event) {
   event.preventDefault();
-
-  // Obtener valores de el formulario//
   const nuevoContacto = {
-    nombre: document.getElementById("nombre").value,
-    email: document.getElementById("email").value,
-    mensaje: document.getElementById("mensaje").value,
-    url: document.getElementById("url").value,
+      nombre: document.getElementById("nombre").value,
+      email: document.getElementById("email").value,
+      mensaje: document.getElementById("mensaje").value,
+      url: document.getElementById("url").value,
   };
-  readAll(nuevoContacto);
+
+  agregarContacto(nuevoContacto)
+      .then(() => {
+          // Limpiar el formulario después de agregar//
+          event.target.reset();
+      })
+      .catch(() => alert('Error al agregar el contacto'));
 });
-// Borrar todos los contactos
+
+// Event Listener para borrar todos los contactos//
 document.getElementById("borrarTodo").addEventListener("click", function () {
-    db.collection("usuarios")
-    .get()
-    .then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        doc.ref.delete();
-      });
-    });
-  //printData();
-  //window.location.reload();
-  contactos = [];
-  //readAll();
-  alert("Todos los contactos han sido eliminados");
-});/*
-document.getElementById("delete").addEventListener("click", function() {
-    alert("nobxis")
-    db.collection("usuarios")
-    .get()
-    .then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        doc.ref.delete();
-      });
-    });
-  });
-*/
-  document.getElementById("borrarSeleccionado").addEventListener("click", function () {
-  alert("iefbibo")
-    const id = prompt('Introduce el ID a borrar');
-  db.collection('usuarios').doc(id).delete().then(() => {
-    alert(`Usuario ${id} ha sido borrado`);
-    //Clean
-    document.getElementById('listaContactos').innerHTML = "";
-    //Read all again¡
-  })
-    .catch(() => console.log('Error borrando documento'));
+      db.collection("usuarios")
+          .get()
+          .then((querySnapshot) => {
+              const promesas = [];
+              querySnapshot.forEach((doc) => {
+                  promesas.push(doc.ref.delete());
+              });
+              return Promise.all(promesas);
+          })
+          .then(() => {
+              alert("Todos los contactos han sido eliminados");
+              printData();
+          })
+          .catch((error) => {
+              console.error('Error al borrar documentos:', error);
+              alert('Error al borrar los contactos');
+          });
+        }
+);
+// Event Listener para borrar contacto seleccionado//
+document.getElementById("borrarSeleccionado").addEventListener("click", function () {
+  const id = prompt('Introduce el ID del contacto a borrar');
+  if (id) {
+      borrarDocumento(id);
+  }
+});
 
-  })
-/*function borrarContacto() {
-    db.collection("usuarios")
-    .get()
-    .then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        doc.ref.delete();
-      });
-    });
-  
- // printData();
-
-  alert("Todos los contactos han sido eliminados");
-}
-
-*/
+// Cargar datos iniciales//
+document.addEventListener('DOMContentLoaded', () => {
+  printData();
+});
